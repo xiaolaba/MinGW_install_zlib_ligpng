@@ -10,7 +10,8 @@ Steps:
 2)    Run the script in your MinGW shell  
 
 
-### script
+
+### script, uses crul to download, no warning, ok.
 
 ```
 #!/bin/bash
@@ -19,12 +20,79 @@ Steps:
 ZLIB_VERSION="1.3.1"
 LIBPNG_VERSION="1.6.43"
 #MINGW_PATH="/path/to/your/MinGW"  # Replace with your actual MinGW path
-MINGW_PATH="c:/MinGW"  # my actual MinGW path
+MINGW_PATH="c:/MinGW"  # Replace with your actual MinGW path
 
 
 # Directories for zlib and libpng source code
 ZLIB_DIR="zlib-$ZLIB_VERSION"
-LIBPNG_DIR="lpng$LIBPNG_VERSION"
+LIBPNG_DIR="libpng-$LIBPNG_VERSION"
+
+# Step 1: Download zlib
+if [ ! -d "$ZLIB_DIR" ]; then
+    echo "Downloading zlib-$ZLIB_VERSION..."
+    curl -O https://zlib.net/zlib-$ZLIB_VERSION.tar.gz
+    tar -xzf zlib-$ZLIB_VERSION.tar.gz
+else
+    echo "zlib-$ZLIB_VERSION already downloaded."
+fi
+
+# Step 2: Build zlib
+cd "$ZLIB_DIR"
+echo "Building zlib..."
+make -f win32/Makefile.gcc
+
+# Copy zlib headers and library to MinGW
+echo "Installing zlib..."
+cp zlib.h zconf.h "$MINGW_PATH/include"
+cp libz.a "$MINGW_PATH/lib"
+
+cd ..
+
+# Step 3: Download libpng
+if [ ! -d "$LIBPNG_DIR" ]; then
+    echo "Downloading libpng-$LIBPNG_VERSION..."
+	#https://nchc.dl.sourceforge.net/project/libpng/libpng16/1.6.43/libpng-1.6.43.tar.gz
+    curl -O https://nchc.dl.sourceforge.net/project/libpng/libpng16/1.6.43/libpng-1.6.43.tar.gz
+    tar -xzf libpng-$LIBPNG_VERSION.tar.gz
+else
+    echo "libpng-$LIBPNG_VERSION already downloaded."
+fi
+
+# Step 4: Build libpng
+cd "$LIBPNG_DIR"
+echo "Building libpng..."
+
+# Use makefile.gcc to build libpng and specify paths for zlib
+make -f scripts/makefile.gcc ZLIBINC="../$ZLIB_DIR" ZLIBLIB="../$ZLIB_DIR"
+
+# Copy libpng headers and library to MinGW
+echo "Installing libpng..."
+cp png.h pngconf.h "$MINGW_PATH/include"
+cp libpng.a "$MINGW_PATH/lib"
+
+echo "Build and installation of zlib and libpng completed."
+
+cd ..
+
+
+```
+
+
+
+
+### script, uses wget to download, some warning but ok.
+
+```
+#!/bin/bash
+
+# Define paths for zlib and libpng
+ZLIB_VERSION="1.3.1"
+LIBPNG_VERSION="1.6.43"
+MINGW_PATH="c:/MinGW"  # Replace with your actual MinGW path
+
+# Directories for zlib and libpng source code
+ZLIB_DIR="zlib-$ZLIB_VERSION"
+LIBPNG_DIR="libpng-$LIBPNG_VERSION"
 
 # Step 1: Download zlib
 if [ ! -d "$ZLIB_DIR" ]; then
@@ -50,8 +118,9 @@ cd ..
 # Step 3: Download libpng
 if [ ! -d "$LIBPNG_DIR" ]; then
     echo "Downloading libpng-$LIBPNG_VERSION..."
-    wget https://download.sourceforge.net/libpng/libpng-$LIBPNG_VERSION.tar.gz
-    tar -xzf libpng-$LIBPNG_VERSION.tar.gz
+	#wget https://nchc.dl.sourceforge.net/project/libpng/libpng16/1.6.43/libpng-1.6.43.tar.gz
+	wget https://downloads.sourceforge.net/project/libpng/libpng16/$LIBPNG_VERSION/libpng-$LIBPNG_VERSION.tar.gz
+	tar -xzf libpng-$LIBPNG_VERSION.tar.gz
 else
     echo "libpng-$LIBPNG_VERSION already downloaded."
 fi
@@ -71,7 +140,13 @@ cp libpng.a "$MINGW_PATH/lib"
 echo "Build and installation of zlib and libpng completed."
 
 cd ..
+
 ```
+
+
+
+
+
 
 
 ### Script doing:  
